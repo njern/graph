@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	//"log"
 	"math"
 	"os"
 	"strconv"
@@ -150,13 +149,20 @@ func (g *UndirectedGraph) PrimMST(start Vertex) []Edge {
 	vNew := Vertices{start}
 	var eNew []Edge
 
+	var count = 0
+
 	for len(vNew) != len(g.vertices) {
+		// Dirty hack :) - Break after we have run more than O(n^2) times - it's a disconnected graph
+		count++
+		if count > (len(g.vertices) * len(g.vertices) * 2) {
+			break
+		}
+
 		var minWeightCandidate int64 = math.MaxInt64
 		var vertexCandidate Vertex
 		var edgeCandidate Edge
 
 		for _, v := range vNew {
-
 			for _, edge := range g.edges[v] {
 				if vNew.contains(edge.end) == false {
 					if edge.weight < minWeightCandidate {

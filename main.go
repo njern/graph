@@ -40,11 +40,15 @@ func main() {
 
 		edges := d.PrimMST(d.vertices[0])
 		var edgeLabels []string
+		//var totalWeight int64
 		for _, edge := range edges {
 			edgeLabels = append(edgeLabels, edge.id)
+			//totalWeight += edge.weight
 		}
 		sort.Strings(edgeLabels)
 
 		fmt.Printf("%s\n", strings.Join(edgeLabels, ","))
+		// fmt.Printf("total weight: %d\n", totalWeight)
+
 	}
 }
