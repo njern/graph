@@ -21,6 +21,10 @@ type Vertex struct {
 	id string
 }
 
+func (v *Vertex) Equals(v2 *Vertex) bool {
+	return v.id == v2.id
+}
+
 type Edge struct {
 	start  Vertex
 	end    Vertex

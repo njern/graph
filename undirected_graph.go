@@ -4,7 +4,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
+	//"log"
+	"math"
 	"os"
 	"strconv"
 )
@@ -143,25 +144,34 @@ func NewUndirectedGraphFromFile(filePath string, valueSeparator rune) (*Undirect
 	return &g, nil
 }
 
-func (g *UndirectedGraph) depthFirstSearch(v Vertex, visited Vertices, depth int, depthFirstIndex map[Vertex]int) (Vertices, int, map[Vertex]int) {
-	visited = append(visited, v)
-	log.Printf("Visiting vertex '%s' with DFI: %d\n", v.id, depth)
+// PrimMST implements Prim's algorithm. Shamelessly implemented
+// as per it's Wikipedia description: http://en.wikipedia.org/wiki/Prim's_algorithm
+func (g *UndirectedGraph) PrimMST(start Vertex) []Edge {
+	vNew := Vertices{start}
+	var eNew []Edge
 
-	// Note the
-	depthFirstIndex[v] = depth
-	depth += 1
-	//log.Printf("Already visited %s\n", visited)
+	for len(vNew) != len(g.vertices) {
+		var minWeightCandidate int64 = math.MaxInt64
+		var vertexCandidate Vertex
+		var edgeCandidate Edge
 
-	if edges, ok := g.edges[v]; ok {
-		// There are some "children" here to explore
-		for _, edge := range edges {
-			if visited.contains(edge.end) {
-				// If already visited, continue
-				continue
+		for _, v := range vNew {
+
+			for _, edge := range g.edges[v] {
+				if vNew.contains(edge.end) == false {
+					if edge.weight < minWeightCandidate {
+						vertexCandidate = edge.end
+						edgeCandidate = edge
+						minWeightCandidate = edge.weight
+					}
+				}
 			}
-			visited, depth, depthFirstIndex = g.depthFirstSearch(edge.end, visited, depth, depthFirstIndex)
+		}
+		if vertexCandidate.id != "" {
+			vNew = append(vNew, vertexCandidate)
+			eNew = append(eNew, edgeCandidate)
 		}
 	}
 
-	return visited, depth, depthFirstIndex
+	return eNew
 }
