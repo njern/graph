@@ -11,6 +11,8 @@ import (
 var (
 	shortest_path = flag.String("shortest_path", "", "The CSV file from which to read the input graph.")
 	prim          = flag.String("prim", "", "The CSV file from which to read the input graph for calculating Minimum Spanning Trees (exercise 3).")
+	vertex_colors = flag.String("vertex_colors", "", "The CSV file from which to read the input graph for calculating minimum vertex coloring (exercise 4).")
+	edge_colors   = flag.String("edge_colors", "", "The CSV file from which to read the input graph for calculating minimum edge coloring (exercise 4).")
 )
 
 func parseFlags() {
@@ -49,6 +51,25 @@ func main() {
 
 		fmt.Printf("%s\n", strings.Join(edgeLabels, ","))
 		// fmt.Printf("total weight: %d\n", totalWeight)
+	} else if *vertex_colors != "" {
+		d, err := NewUndirectedGraphFromFile(*vertex_colors, '\t')
+		if err != nil {
+			log.Fatalf("Parsing graph failed with error: %s\n", err)
+		}
 
+		vertexColors := d.VertexColors()
+		for vertex, color := range vertexColors {
+			fmt.Printf("%s: %d\n", vertex.id, color)
+		}
+	} else if *edge_colors != "" {
+		d, err := NewUndirectedGraphFromFile(*edge_colors, '\t')
+		if err != nil {
+			log.Fatalf("Parsing graph failed with error: %s\n", err)
+		}
+
+		vertexColors := d.EdgeColors()
+		for vertex, color := range vertexColors {
+			fmt.Printf("%s: %d\n", vertex.id, color)
+		}
 	}
 }
