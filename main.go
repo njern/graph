@@ -9,10 +9,11 @@ import (
 )
 
 var (
-	shortest_path = flag.String("shortest_path", "", "The CSV file from which to read the input graph.")
-	prim          = flag.String("prim", "", "The CSV file from which to read the input graph for calculating Minimum Spanning Trees (exercise 3).")
-	vertex_colors = flag.String("vertex_colors", "", "The CSV file from which to read the input graph for calculating minimum vertex coloring (exercise 4).")
-	edge_colors   = flag.String("edge_colors", "", "The CSV file from which to read the input graph for calculating minimum edge coloring (exercise 4).")
+	shortest_path     = flag.String("shortest_path", "", "The CSV file from which to read the input graph.")
+	prim              = flag.String("prim", "", "The CSV file from which to read the input graph for calculating Minimum Spanning Trees (exercise 3).")
+	vertex_colors     = flag.String("vertex_colors", "", "The CSV file from which to read the input graph for calculating minimum vertex coloring (exercise 4).")
+	edge_colors       = flag.String("edge_colors", "", "The CSV file from which to read the input graph for calculating minimum edge coloring (exercise 4).")
+	max_card_matching = flag.String("max_card_matching", "", "The CSV file from which to read the input graph for calculating a maximum-cardinality edge matching in a connected undirected graph (exercise 5).")
 )
 
 func parseFlags() {
@@ -71,5 +72,18 @@ func main() {
 		for vertex, color := range vertexColors {
 			fmt.Printf("%s: %d\n", vertex.id, color)
 		}
+	} else if *max_card_matching != "" {
+		d, err := NewUndirectedGraphFromFile(*max_card_matching, '\t')
+		if err != nil {
+			log.Fatalf("Parsing graph failed with error: %s\n", err)
+		}
+
+		edges := d.maxCardMatching(10000)
+		var edgeLabels []string
+		for _, edge := range edges {
+			edgeLabels = append(edgeLabels, edge.id)
+		}
+		sort.Strings(edgeLabels)
+		fmt.Printf("%s\n", strings.Join(edgeLabels, ","))
 	}
 }
