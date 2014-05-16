@@ -344,3 +344,11 @@ func (g *UndirectedGraph) EdgeColors() map[Edge]int {
 
 	return edgeColors
 }
+
+// maxCardMatching finds a maximum-cardinality edge
+// matching in a connected undirected graph.
+func (g *UndirectedGraph) maxCardMatching([]Edge) {
+	for {
+		// Generate maximal matchings until we find a maximum matching.
+	}
+}
