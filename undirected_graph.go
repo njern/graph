@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/rand"
 	"os"
 	"strconv"
+	"time"
 )
 
 type UndirectedGraph struct {
@@ -345,10 +347,126 @@ func (g *UndirectedGraph) EdgeColors() map[Edge]int {
 	return edgeColors
 }
 
-// maxCardMatching finds a maximum-cardinality edge
-// matching in a connected undirected graph.
-func (g *UndirectedGraph) maxCardMatching([]Edge) {
+// addableEdgesRemaining returns a slice containing all the edges not
+// yet in maxCardEdges nor a neighbour to one of the maxCardEdges.
+func (g *UndirectedGraph) addableEdgesRemaining(maxCardEdges Edges) Edges {
+	var addableEdges Edges
+
+	for _, remainingEdge := range g.edgeList {
+		if maxCardEdges.contains(remainingEdge) {
+			// Already added this edge
+			continue
+		}
+
+		neighbourFound := false
+		for _, existingEdge := range maxCardEdges {
+			if existingEdge.start == remainingEdge.start ||
+				existingEdge.start == remainingEdge.end ||
+				existingEdge.end == remainingEdge.start ||
+				existingEdge.end == remainingEdge.end {
+				// If this Edge is neighbour to one of the already added edges...
+				neighbourFound = true
+				break
+			}
+		}
+		if neighbourFound == false {
+			addableEdges = append(addableEdges, remainingEdge)
+		}
+
+	}
+	return addableEdges
+}
+
+// addableMonoEdgesRemaining returns a slice containing all the edges
+// not yet in maxCardEdges nor a neighbour to one of the maxCardEdges
+// which are also "mono" edges, as in edges where the start vertex is
+// only connected with a single edge to the graph.
+func (g *UndirectedGraph) addableMonoEdgesRemaining(maxCardEdges Edges) Edges {
+	var monoEdges Edges
+
+	for _, edge := range g.edgeList {
+		if len(g.edges[edge.start]) == 1 {
+			if maxCardEdges.contains(edge) {
+				// Already added this edge
+				continue
+			}
+
+			neighbourFound := false
+			for _, existingEdge := range maxCardEdges {
+				if existingEdge.start == edge.start ||
+					existingEdge.start == edge.end ||
+					existingEdge.end == edge.start ||
+					existingEdge.end == edge.end {
+					// If this Edge is neighbour to one of the already added edges...
+					neighbourFound = true
+					break
+				}
+			}
+
+			if neighbourFound == false {
+				monoEdges = append(monoEdges, edge)
+			}
+		}
+	}
+	return monoEdges
+}
+
+// maxCardMatching tries to find a maximum-cardinality edge
+// matching in a connected undirected graph. The function
+// uses a greedy, iterative algorithm, and as such it will
+// only work for connected graphs and is not guaranteed to
+// always find the absolute maximum edge matching.
+func (g *UndirectedGraph) maxCardMatching(iterationsMax int) Edges {
+	iterations := 0
+	var bestResultSoFar Edges
+
 	for {
-		// Generate maximal matchings until we find a maximum matching.
+		// Generate maximal matchings until we find a maximum matching
+		// or we run out of iterationsMax.
+
+		iterations += 1
+		var maxCardEdges Edges
+
+		// Create and seed a random generator.
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+		// Keep adding random Edges until there are no more edges that can be added.
+		for {
+			// Prefer "mono" edges
+			remainingEdges := g.addableMonoEdgesRemaining(maxCardEdges)
+			if len(remainingEdges) == 0 {
+				// When we run out of mono edges, settle for any (still addable) edges
+				remainingEdges = g.addableEdgesRemaining(maxCardEdges)
+			}
+			if len(remainingEdges) == 0 {
+				// If we run out of edges...
+				break
+			}
+
+			// Randomly add one of the available edges.
+			randomEdge := remainingEdges[r.Intn(len(remainingEdges))]
+			maxCardEdges = append(maxCardEdges, randomEdge)
+		}
+
+		// If this is the best result so far, store it.
+		if len(maxCardEdges) > len(bestResultSoFar) {
+			bestResultSoFar = maxCardEdges
+		}
+
+		// fmt.Printf("Generated maximal edge matching with %d matches for graph with %d vertices\n", len(maxCardEdges), len(g.vertices))
+
+		if len(g.vertices)/len(maxCardEdges) == 2 {
+			if len(g.vertices)%len(maxCardEdges) == 0 || len(g.vertices)%len(maxCardEdges) == 1 {
+				// We have a set of maximum-cardinality edges including either:
+				// A) All vertices (even # of vertices)
+				// B) All vertices except one (odd # of vertices)
+				// 	=> We found a maximum matching
+				return maxCardEdges
+			}
+		}
+
+		if iterations > iterationsMax {
+			return bestResultSoFar
+		}
 	}
 }
