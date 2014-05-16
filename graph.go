@@ -6,17 +6,6 @@ type Graph interface {
 	String() string
 }
 
-type Vertices []Vertex
-
-func (v *Vertices) contains(vertex Vertex) bool {
-	for _, existingVertex := range *v {
-		if existingVertex == vertex {
-			return true
-		}
-	}
-	return false
-}
-
 type Vertex struct {
 	id string
 }
@@ -30,4 +19,29 @@ type Edge struct {
 	end    Vertex
 	weight int64
 	id     string
+}
+
+func (e *Edge) Equals(e2 *Edge) bool {
+	return e.id == e2.id && e.start.Equals(e2.start) && e.end.Equals(e2.end) && e.weight == e2.weight
+}
+
+type Vertices []Vertex
+type Edges []Edge
+
+func (v *Vertices) contains(vertex Vertex) bool {
+	for _, existingVertex := range *v {
+		if existingVertex == vertex {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *Edges) contains(edge Edge) bool {
+	for _, existingEdge := range *e {
+		if existingEdge == edge {
+			return true
+		}
+	}
+	return false
 }
