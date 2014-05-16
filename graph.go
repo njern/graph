@@ -22,7 +22,11 @@ type Edge struct {
 }
 
 func (e *Edge) Equals(e2 *Edge) bool {
-	return e.id == e2.id && e.start.Equals(e2.start) && e.end.Equals(e2.end) && e.weight == e2.weight
+	return e.id == e2.id
+}
+
+func (e *Edge) Reverse() Edge {
+	return Edge{e.end, e.start, e.weight, e.id}
 }
 
 type Vertices []Vertex
