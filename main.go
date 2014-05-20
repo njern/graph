@@ -14,6 +14,9 @@ var (
 	vertex_colors     = flag.String("vertex_colors", "", "The CSV file from which to read the input graph for calculating minimum vertex coloring (exercise 4).")
 	edge_colors       = flag.String("edge_colors", "", "The CSV file from which to read the input graph for calculating minimum edge coloring (exercise 4).")
 	max_card_matching = flag.String("max_card_matching", "", "The CSV file from which to read the input graph for calculating a maximum-cardinality edge matching in a connected undirected graph (exercise 5).")
+	max_flow          = flag.String("max_flow", "", "Find max flow from a directed graph (exercise 6).")
+	max_flow_source   = flag.String("source", "", "Source for max flow (vertex ID)")
+	max_flow_sink     = flag.String("sink", "", "Sink for max flow (vertex ID)")
 )
 
 func parseFlags() {
@@ -85,5 +88,26 @@ func main() {
 		}
 		sort.Strings(edgeLabels)
 		fmt.Printf("%s\n", strings.Join(edgeLabels, ","))
+	} else if *max_flow != "" {
+		d, err := NewDirectedGraphFromFile(*max_flow, '\t')
+		if err != nil {
+			log.Fatalf("Parsing graph failed with error: %s\n", err)
+		}
+
+		var source, sink Vertex
+
+		for _, v := range d.vertices {
+			if v.id == *max_flow_source {
+				source = v
+			} else if v.id == *max_flow_sink {
+				sink = v
+			}
+		}
+
+		usedCapacity, maxFlow := d.FindMaxFlow(source, sink)
+		for edge, usedCap := range usedCapacity {
+			fmt.Printf("%s: %d\n", edge.id, usedCap)
+		}
+		fmt.Printf("\n\nMax flow: %d\n", maxFlow)
 	}
 }
