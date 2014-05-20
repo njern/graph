@@ -184,5 +184,93 @@ func (d *DirectedGraph) shortestPathsFrom(source Vertex) {
 			fmt.Printf("%s\t%s\t%d\n", source, v, dist)
 		}
 	}
+}
 
+func (d *DirectedGraph) findPathWithFlow(source, sink Vertex, usedCapacity, maxCapacity map[Edge]int64) Edges {
+	parentPath := make(map[Vertex]Edge)
+
+	alreadyAddedToStack := make(map[Vertex]bool)
+	for _, vertex := range d.vertices {
+		alreadyAddedToStack[vertex] = false
+	}
+
+	vStack := VertexStack{}
+	vStack.Push(source)
+	alreadyAddedToStack[source] = true
+
+	for vStack.Len() > 0 {
+		// Pop the top node
+		v := vStack.Pop()
+		// Is it the sink?
+		if v == sink {
+			// If so, backtrace the path and return it.
+			var reversePath Edges
+
+			for {
+				step, ok := parentPath[v]
+
+				if !ok { // We reached the source
+					//fmt.Printf("No parent path for vertex %s\n", v)
+					return reversePath // Return the path (order does not matter)
+				} else {
+					//fmt.Printf("Adding path from %s to %s to paths\n", step.start.id, step.end.id)
+					reversePath = append(reversePath, step) // Add the last step
+					v = step.start                          // Go to the parent vertex.
+				}
+			}
+		} else {
+			for _, edge := range d.edges[v] {
+				// Add all the node's children (not already added)
+				// with free capacity to the queue.
+				if alreadyAddedToStack[edge.end] == false {
+					if maxCapacity[edge]-usedCapacity[edge] > 0 {
+						vStack.Push(edge.end)
+						alreadyAddedToStack[edge.end] = true
+						parentPath[edge.end] = edge
+					}
+				}
+			}
+		}
+	}
+
+	return nil // No path with free capacity left.
+}
+
+func (d *DirectedGraph) pathWithFlowExists(source, sink Vertex, usedCapacity, maxCapacity map[Edge]int64) bool {
+	path := d.findPathWithFlow(source, sink, usedCapacity, maxCapacity)
+	if len(path) > 0 {
+		return true
+	}
+
+	return false
+}
+
+func (d *DirectedGraph) FindMaxFlow(source, sink Vertex) (map[Edge]int64, int) {
+	// Track max flow
+	maxFlow := 0
+	// Set usedCapacity for all edges to zero
+	usedCapacity := make(map[Edge]int64)
+	// TODO: Fix dirty hack - we use the weight as the flow value.
+	maxCapacity := make(map[Edge]int64)
+	for _, edges := range d.edges {
+		for _, e := range edges {
+			usedCapacity[e] = 0
+			maxCapacity[e] = e.weight
+		}
+	}
+
+	for {
+		// While there is a path with free capacity - look for paths
+		path := d.findPathWithFlow(source, sink, usedCapacity, maxCapacity)
+		if len(path) == 0 {
+			break
+		}
+		// When we find a path, send 1 unit of "flow" along it's path.
+		for _, edge := range path {
+			usedCapacity[edge] += 1
+		}
+		maxFlow += 1
+	}
+
+	return usedCapacity, maxFlow
 }
